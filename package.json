@@ -1,0 +1,49 @@
+{
+  "name": "dsh-forget-session",
+  "version": "1.0.0",
+  "description": "DeepSeek Harness 插件：在每个会话的「…」菜单中加入「遗忘会话」，把该会话从侧栏与磁盘（会话日志、投影缓存、工作区记账、归档/置顶集合）中彻底移除；灵枢记忆插件的沉淀数据不受影响。",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": ">=4.0.1",
+    "@deepseek-ai/dsh-typert-protocol": ">=0.1.5-rc.1"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-typert-protocol": {
+      "optional": true
+    }
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "cordis",
+    "forget",
+    "session"
+  ],
+  "license": "MIT"
+}
