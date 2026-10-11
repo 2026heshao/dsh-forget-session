@@ -34,29 +34,19 @@ DeepSeek Harness（DSH）插件：在每个会话的「…」菜单里加一个*
 
 ## 安装
 
-本插件以 file: 依赖方式安装进 desktop profile（与 `dsh-skill-mcp-board` 同法）：
-
-```powershell
-cd "$env:USERPROFILE\.dsh\profiles\desktop"
-node "C:\Users\LENOVO\AppData\Roaming\npm\node_modules\pnpm\bin\pnpm.cjs" install --ignore-scripts
+```sh
+dsh plugin --profile web add github:2026heshao/dsh-forget-session
 ```
 
-`package.json` 中已声明：
-
-```json
-"dsh-forget-session": "file:D:/桌面/AI Port/DSH plugins/dsh-forget-session"
-```
-
-`dsh.profile.bundles` 数组里已加入 `"dsh-forget-session"`。
-
-安装后**重启 DSH** 即生效。
+装完**重启 DSH** 即生效（`--profile` 后换成你实际使用的 profile 名）。
 
 ## 卸载
 
-1. `package.json` 的 `dependencies` 删除 `"dsh-forget-session"` 行，
-   `dsh.profile.bundles` 删除 `"dsh-forget-session"` 项；
-2. 重跑上面的 `pnpm install`；
-3. 重启 DSH。
+```sh
+dsh plugin --profile web remove dsh-forget-session
+```
+
+`remove` 会同时移除依赖与补丁层，重启 DSH 后菜单恢复原状。
 
 ## 工作原理（给维护者）
 
