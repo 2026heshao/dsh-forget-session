@@ -51,21 +51,21 @@ DeepSeek Harness（DSH）插件：在每个会话的「…」菜单里加一个*
 
 ## 安装
 
-本插件以 file: 依赖方式安装进 profile（与 `dsh-skill-mcp-board` 同法）。装进哪个 profile，就在哪个端生效。
+用 DSH 官方命令安装（装进哪个 profile，就在哪个端生效）：
 
-```powershell
-cd "$env:USERPROFILE\.dsh\profiles\desktop"
-node "C:\Users\LENOVO\AppData\Roaming\npm\node_modules\pnpm\bin\pnpm.cjs" install --ignore-scripts
+```sh
+dsh plugin --profile web add github:2026heshao/dsh-forget-session
 ```
 
-安装后**重启 DSH** 即生效（源码目录以 junction 直连，改源码只需重启）。
+装完**重启 DSH** 即生效（`--profile` 后换成你实际使用的 profile 名）。
 
 ## 卸载
 
-1. `package.json` 的 `dependencies` 删除 `"dsh-forget-session"` 行，
-   `dsh.profile.bundles` 删除 `"dsh-forget-session"` 项；
-2. 重跑上面的 `pnpm install`；
-3. 重启 DSH。
+```sh
+dsh plugin --profile web remove dsh-forget-session
+```
+
+`remove` 会同时移除依赖与补丁层，重启 DSH 后菜单恢复原状。
 
 ## 工作原理（给维护者）
 
@@ -111,25 +111,6 @@ dry-run 不删、apply 清扫、audit 盘点、preview、delete 全瀑布（目�
   索引内的已删会话行会在下次 `_reconcile`（任何一次搜索）时自动收敛消失
   —— 持久化列表已不含该 id，索引会以 `persistentDeletes` 路径清掉它；
   `openAt: never`（默认）则索引为内存态，进程生命周期内自愈。
-
-## 部署注意（重要）
-
-本插件在 profile 里以 **junction** 直连源码目录：
-
-```
-C:\Users\LENOVO\.dsh\profiles\desktop\node_modules\dsh-forget-session
-   → D:\桌面\AI Port\DSH plugins\dsh-forget-session
-```
-
-所以**改源码后只需重启 DSH**。若某次 `pnpm install` 把 junction 换成了
-真实目录副本，重新建立 junction 即可：
-
-```powershell
-cmd /c rmdir "$env:USERPROFILE\.dsh\profiles\desktop\node_modules\dsh-forget-session"
-New-Item -ItemType Junction `
-  -Path "$env:USERPROFILE\.dsh\profiles\desktop\node_modules\dsh-forget-session" `
-  -Target "D:\桌面\AI Port\DSH plugins\dsh-forget-session"
-```
 
 ## 许可
 
