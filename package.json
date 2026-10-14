@@ -44,7 +44,18 @@
     "dsh-plugin",
     "cordis",
     "forget",
-    "session"
+    "session",
+    "session-cleanup",
+    "sidebar"
   ],
+  "author": "2026heshao",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/2026heshao/dsh-forget-session.git"
+  },
+  "homepage": "https://github.com/2026heshao/dsh-forget-session#readme",
+  "bugs": {
+    "url": "https://github.com/2026heshao/dsh-forget-session/issues"
+  },
   "license": "MIT"
 }
