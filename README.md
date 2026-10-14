@@ -92,7 +92,7 @@ dsh plugin --profile web remove dsh-forget-session
 ## 测试
 
 ```powershell
-cd "D:\桌面\AI Port\DSH plugins\dsh-forget-session"
+cd <本仓库目录>
 node test/verify.mjs
 ```
 
