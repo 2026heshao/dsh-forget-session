@@ -1,7 +1,7 @@
 {
   "name": "dsh-forget-session",
-  "version": "1.0.0",
-  "description": "DeepSeek Harness 插件：在每个会话的「…」菜单中加入「遗忘会话」，把该会话从侧栏与磁盘（会话日志、投影缓存、工作区记账、归档/置顶集合）中彻底移除；灵枢记忆插件的沉淀数据不受影响。",
+  "version": "2.0.0",
+  "description": "DeepSeek Harness 插件：在每个会话的「…」菜单中加入「遗忘会话」，把该会话从侧栏与磁盘（会话日志、投影缓存、工作区记账、归档/置顶集合）中彻底移除；v2 加入复活守卫、删除后复查补删、会话体检（空壳清扫修复 + audit 盘点）与官方列表重拉，根治「已删会话回到未分组」。灵枢记忆插件的沉淀数据不受影响。",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -11,11 +11,12 @@
   },
   "files": [
     "lib",
+    "test",
     "cordis.patch.yml",
     "README.md"
   ],
   "scripts": {
-    "test": "node --test"
+    "test": "node test/verify.mjs"
   },
   "dsh": {
     "bundle": {
