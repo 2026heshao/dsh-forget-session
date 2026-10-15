@@ -1,0 +1,24 @@
+npm notice
+npm notice package: dsh-forget-session@2.0.1
+npm notice Tarball Contents
+npm notice 3.6kB LICENSE
+npm notice 7.3kB README.md
+npm notice 222B cordis.patch.yml
+npm notice 15.6kB lib/client.js
+npm notice 30.6kB lib/index.js
+npm notice 1.7kB package.json
+npm notice 8.3kB test/verify.mjs
+npm notice Tarball Details
+npm notice name: dsh-forget-session
+npm notice version: 2.0.1
+npm notice filename: dsh-forget-session-2.0.1.tgz
+npm notice package size: 22.5 kB
+npm notice unpacked size: 67.3 kB
+npm notice shasum: 8d9f24f301b9b728f7aafb0c9d4c9eb69ce378c5
+npm notice integrity: sha512-0A8H8eczCSNLJ[...]BENlDJ6U0WEEA==
+npm notice total files: 7
+npm notice
+npm notice Publishing to https://registry.npmjs.org/ with tag latest and public access
+npm error code E409
+npm error 409 Conflict - PUT https://registry.npmjs.org/dsh-forget-session - Cannot publish over previously staged version "2.0.1".
+npm error A complete log of this run can be found in: C:\Users\LENOVO\AppData\Local\npm-cache\_logs\2026-10-14T15_03_13_993Z-debug-0.log
