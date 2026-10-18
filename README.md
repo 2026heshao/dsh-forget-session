@@ -16,6 +16,7 @@ DeepSeek Harness（DSH）插件：在会话行「…」菜单里加一个**「�
 | 删除对象 | 方式 |
 | --- | --- |
 | 正在运行的工作 | 官方 `workspace/session-stop` 瀑布（stopActivity 归档路径） |
+| **活体会话（Session store 内）** | 官方 `entry.detach()` 内部通道：`store.delete` + `attachments.delete` + `emitDisposed`（v2.2 新增，见下文根因 3） |
 | 工作区记账（workspace.json 的 sessionIds） | 官方 `detachSession` 通道（domain 写链） |
 | 归档集合 / 置顶集合 | 官方 `unarchiveSession` / `unpinSession` |
 | 会话日志目录 `~/.dsh/sessions/<项目键>/<id>` | 整目录删除（含 `_no-cwd`、历史无前缀布局、占用重试） |
@@ -35,6 +36,7 @@ DeepSeek Harness（DSH）插件：在会话行「…」菜单里加一个**「�
 | --- | --- | --- |
 | **Windows 活体删除竞态** | 会话打开过就有 write handle / 跨进程 lease：`rm` 目录报 EBUSY/EPERM，v1 静默失败 → 文件残留 → 重启后 registry 重新收编；且删除后活体 teardown 的迟到 append 会**重建已删目录** | 删除后**验证性复查**，占用类错误退避重试；布置**复活守卫**：2s 起指数退避（封顶 32s）、总窗 ~130s 周期复查，目录被重建立即再删 |
 | **客户端列表复活** | Host 的 `session.list` 仍会列出活体会话；客户端任何一次 `refreshList`（重连即触发）都会把已删行合并回来 | 删除后调用官方 `sessions.refresh()` 重拉基线，让复活行在可见前被再次摘掉 |
+| **活体从未摘除（v2.2 根治）** | `SessionStore` 没有公开的 remove API：会话一旦进入 store，`session.list`（合并活体 + 持久化）永远列出它 —— 删除后**立刻**回到「未分组」；且持久层 writer 握着 write handle 顶住磁盘，`rm` EBUSY，复活守卫删 ~130s 也是白删 | 走每个 store entry 自带的官方 `entry.detach()`（= `store.delete` + `attachments.delete` + `emitDisposed`）：既让行从 `session.list` 消失（官方 `api-session/removed` 帧），又释放持久层 write handle —— 删盘这一步才真正删得动 |
 
 > v2 一度还加过「会话体检 / 空壳清扫 / audit 盘点」等额外远端点，但它们并未
 > 随客户端契约挂载，点了只会得到 `typert gateway` 错误，属于无用面 —— 已全部
@@ -70,10 +72,12 @@ dsh plugin --profile web remove dsh-forget-session
 
 - **Host 半**（`lib/index.js`）：`TypertRemoteService`，服务名 `forgetSession`，
   `inject: ["workspaceRegistry"]`。`delete()` 走官方状态通道
-  （stop / unarchive / unpin / detach），再按 `session-persistence-jsonl` 的
-  同构路径算法（`projectKey` + `encodeSegment`）删除磁盘工件（占用类错误
-  退避重试 + 验证性复查），清投影缓存，最后布置复活守卫。全程不手改
-  `workspace.json` —— 记账由 registry 的官方 mutate 写链完成。
+  （stop / unarchive / unpin / **活体 detach** / detach），再按
+  `session-persistence-jsonl` 的同构路径算法（`projectKey` + `encodeSegment`）
+  删除磁盘工件（占用类错误退避重试 + 验证性复查），清投影缓存，最后布置
+  复活守卫。全程不手改 `workspace.json` —— 记账由 registry 的官方 mutate
+  写链完成。活体摘除经 `ctx.get("sessions").store`（公开类字段 Map）取
+  entry 调 `entry.detach()`，等价于官方 `SessionStore.detachEntered`。
 - **浏览器半**（`lib/client.js`）：`window.__ModuleLoader__` 包，
   `ctx.remote.$mount` 只挂 `delete` 一个方法契约（strict codec 两键并写），
   `ctx.slots.inject("sidebar.workspaces.session.menu.item", ...)` 注册菜单行；
@@ -91,9 +95,9 @@ cd <本仓库目录>
 node test/verify.mjs
 ```
 
-隔离 HOME（`DSH_FORGET_SESSION_HOME` 指向临时目录），13 项断言覆盖：
-契约面只含 `delete`、delete 全瀑布（目录/分片/总表项/detach）、正常会话零误伤、
-幂等、缺参报错、复活守卫清除被重建目录。
+隔离 HOME（`DSH_FORGET_SESSION_HOME` 指向临时目录），15 项断言覆盖：
+契约面只含 `delete`、delete 全瀑布（活体 flush/detach、目录/分片/总表项/
+工作区 detach）、正常会话零误伤、幂等、缺参报错、复活守卫清除被重建目录。
 
 > 测试需要 `@deepseek-ai/cordis` 与 `@deepseek-ai/dsh-typert-protocol`
 > （peer 依赖，随 DSH 提供），在装了本插件的 profile 内可直接运行。
@@ -102,9 +106,9 @@ node test/verify.mjs
 
 - DSH 官方设计是「会话只归档不删除」（见 dsh-client-ui-workspace README），
   本插件是官方通道之外的用户级补充；
-- 若被删会话是本进程活体，Host 先 `flush` 落盘再删文件；活体摘除归它的宿主
-  fiber 生命周期，守卫窗口（~130s）内 teardown 的迟到写入都会被补删。
-  建议在空闲会话上使用删除；
+- 若被删会话是本进程活体：先 `flush` 落盘缓冲事件，再经 `entry.detach()`
+  摘出 store（官方 dispose 通道会关持久层 write handle）。守卫窗口（~130s）
+  内 teardown 的迟到写入都会被补删。建议在空闲会话上使用删除；
 - 会话搜索索引（`session-query-sqlite`）的 `openAt` 非 `never` 时，已删会话行
   会在下次 `_reconcile`（任何一次搜索）自动收敛 —— 持久化列表已不含该 id，
   索引走 `persistentDeletes` 清掉它；`openAt: never`（默认）为内存态，自愈。

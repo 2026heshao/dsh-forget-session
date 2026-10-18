@@ -41,7 +41,7 @@ writeFileSync(join(home, ".dsh", "storages", "session_projcache.json"), JSON.str
 	tables: { sessions: { [victimId]: { keep: true }, [otherId]: { keep: true } } }
 }, null, 1));
 
-// ── 假 registry + 真 Cordis Context（Service 构造需要 ctx.reflect.provide）──
+// ── 假 registry + 假 sessions 服务 + 真 Cordis Context ────────────────
 const detached = [];
 const registry = {
 	readSessionHeader: async (id) => ({ id, cwd: id === victimId ? "D:\\proj" : undefined }),
@@ -49,10 +49,24 @@ const registry = {
 	list: () => [{ sessionIds: [victimId, otherId], detachSession: async (id) => detached.push(id) }],
 	archivedSessionIds: [], pinnedSessionIds: []
 };
+
+// 活体侧：victim 在 Session store 里存活（detach 会把它从 store 摘掉，
+// 忠实模拟官方 detachEntered：store.delete + attachments.delete + emitDisposed）
+const liveDetachCalls = [];
+const liveFlushCalls = [];
+const sessionsService = {
+	store: new Map(),
+	get(id) { return this.store.has(id) ? { id } : undefined; },
+	async flush() { liveFlushCalls.push(1); return true; }
+};
+const liveEntry = { id: victimId, detach: () => { liveDetachCalls.push(victimId); sessionsService.store.delete(victimId); } };
+sessionsService.store.set(victimId, liveEntry);
+
 const { Context } = await import("@deepseek-ai/cordis");
 const ctx = new Context().extend({
 	workspaceRegistry: registry,
-	get(key) { return key === "workspaceRegistry" ? registry : undefined; }
+	sessions: sessionsService,
+	get(key) { return key === "workspaceRegistry" ? registry : key === "sessions" ? sessionsService : undefined; }
 });
 const gateway = new mod.default(ctx, undefined);
 
@@ -73,6 +87,8 @@ const pc = JSON.parse(readFileSync(join(home, ".dsh", "storages", "session_projc
 check("delete.tableEntryGone", pc.tables.sessions[victimId] === undefined);
 check("delete.otherEntryKept", pc.tables.sessions[otherId] !== undefined);
 check("delete.detachCalled", detached.includes(victimId));
+check("delete.liveDetached", del.removed?.detachedLive === true && liveDetachCalls.includes(victimId) && !sessionsService.store.has(victimId));
+check("delete.liveFlushed", del.removed?.flushed === true && liveFlushCalls.length > 0);
 check("delete.guardScheduled", del.removed?.guardScheduled === true);
 
 // 3) 零误伤
