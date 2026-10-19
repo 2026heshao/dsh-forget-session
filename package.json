@@ -1,6 +1,6 @@
 {
   "name": "dsh-forget-session",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "DeepSeek Harness 插件：在会话行「…」菜单加入「遗忘会话」，两段式确认后把会话从侧栏与磁盘（会话日志、投影缓存、工作区记账、归档/置顶集合）彻底移除；v2.2 起先从 Session store 摘除活体（官方 detach 通道），根治「遗忘后立即回到未分组/磁盘删不动」。灵枢记忆不受影响。",
   "type": "module",
   "main": "lib/index.js",
